@@ -1,0 +1,14 @@
+{
+    "name": "evgeny-l/apple-id-token-utility",
+    "type": "utility",
+    "require": {
+        "php": "^7.0",
+        "fproject/php-jwt": "^4.0",
+        "lcobucci/jwt": "^3.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "EvgenyL\\AppleIdTokenUtility\\": "src/"
+        }
+    }
+}
