@@ -1,8 +1,10 @@
 <?php
 namespace EvgenyL\AppleIdTokenUtility;
 
+use EvgenyL\AppleIdTokenUtility\Exceptions\UtilityException;
 use Lcobucci\JWT\Parser;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
+use Lcobucci\JWT\Token as JWTToken;
 use Lcobucci\JWT\ValidationData;
 
 /**
@@ -32,15 +34,25 @@ class IdentityTokenValidator
     }
 
     /**
-     * @param string $token
+     * @param string|IdentityToken|\Lcobucci\JWT\Token $token
      * @return bool
+     * @throws UtilityException
      */
     public function verifyToken($token)
     {
         $this->lastVerificationError = null;
-        $token = (new Parser())->parse((string) $token);
 
-        $tokenHeaders = $token->getHeaders();
+        if (is_string($token)) {
+            $jwtToken = (new Parser())->parse((string) $token);
+        } elseif ($token instanceof IdentityToken) {
+            $jwtToken = $token->getJwtToken();
+        } elseif ($token instanceof JWTToken) {
+            $jwtToken = $token;
+        } else {
+            throw new UtilityException('Invalid token attribute.');
+        }
+
+        $tokenHeaders = $jwtToken->getHeaders();
         if (empty($tokenHeaders['kid']) || empty($tokenHeaders['alg'])) {
             $this->lastVerificationError = 'Invalid token headers.';
             return false;
@@ -59,7 +71,7 @@ class IdentityTokenValidator
         }
         $publicKeyString = $applePublicKey->getPublicKeyString();
 
-        if (!$token->verify($signer, $publicKeyString)) {
+        if (!$jwtToken->verify($signer, $publicKeyString)) {
             $this->lastVerificationError = 'Token signature verification failed.';
             return false;
         }
@@ -67,7 +79,7 @@ class IdentityTokenValidator
         $tokenValidationData = new ValidationData($this->getTime());
         $tokenValidationData->setIssuer(self::DEFAULT_APPLE_TOKEN_ISSUER);
         $tokenValidationData->setAudience($this->getAudience());
-        $tokenIsValid = $token->validate($tokenValidationData);
+        $tokenIsValid = $jwtToken->validate($tokenValidationData);
         if (!$tokenIsValid) {
             $this->lastVerificationError = 'Token claims validation failed.';
             return false;
