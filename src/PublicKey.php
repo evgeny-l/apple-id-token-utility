@@ -2,7 +2,7 @@
 namespace EvgenyL\AppleIdTokenUtility;
 
 use EvgenyL\AppleIdTokenUtility\Exceptions\UtilityException;
-use Firebase\JWT\JWK;
+use EvgenyL\AppleIdTokenUtility\JWT\JWK;
 use UnexpectedValueException;
 
 /**
